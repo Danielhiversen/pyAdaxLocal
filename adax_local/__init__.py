@@ -147,9 +147,8 @@ class AdaxConfig:
                 k += 1
             if self.device_ip:
                 _LOGGER.debug(
-                    "Heater ip is %s and the token is %s".format(
-                        self.device_ip, self.access_token
-                    )
+                    "Heater ip is %s and the token is %s",
+                        self.device_ip, self.access_token,
                 )
                 return True
             return False
