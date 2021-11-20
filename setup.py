@@ -13,7 +13,7 @@ setup(
     name="Adax-local",
     packages=["adax_local"],
     install_requires=install_requires,
-    version="0.0.1",
+    version="0.1.0",
     description="A python3 library to communicate with XXXXX",
     python_requires=">=3.9.0",
     author="Daniel Hjelseth Høyer",
