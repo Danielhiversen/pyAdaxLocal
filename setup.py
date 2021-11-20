@@ -10,8 +10,8 @@ with pathlib.Path("requirements.txt").open() as requirements_txt:
     ]
 
 setup(
-    name="NAME",
-    packages=["NAME"],
+    name="Adax-local",
+    packages=["adax_local"],
     install_requires=install_requires,
     version="0.0.1",
     description="A python3 library to communicate with XXXXX",
