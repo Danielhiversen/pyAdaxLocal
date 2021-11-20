@@ -14,11 +14,11 @@ setup(
     packages=["adax_local"],
     install_requires=install_requires,
     version="0.1.1",
-    description="A python3 library to communicate with XXXXX",
+    description="A python3 library to communicate with Adax",
     python_requires=">=3.8.0",
     author="Daniel Hjelseth Høyer",
     author_email="mail@dahoiv.net",
-    url="https://github.com/Danielhiversen/pyTemplate",
+    url="https://github.com/Danielhiversen/pyAdaxLocal",
     license="MIT",
     classifiers=[
         "Intended Audience :: Developers",
