@@ -30,7 +30,6 @@ class Adax:
         self._url = "https://" + device_ip + "/api"
         self._headers = {"Authorization": "Basic " + self._access_token}
         self._timeout = timeout
-        self.mac_id = None
 
     async def set_target_temperature(self, target_temperature):
         """Set target temperature."""
@@ -86,6 +85,7 @@ class AdaxConfig:
         self.wifi_psk = wifi_psk
         self.access_token = secrets.token_hex(10)
         self.device_ip = None
+        self.mac_id = None
 
     def notification_handler(self, _, data):
         if not data:
@@ -147,7 +147,7 @@ class AdaxConfig:
                 k += 1
             if self.device_ip:
                 _LOGGER.debug(
-                    "Heater ip is {} and the token is {}".format(
+                    "Heater ip is %s and the token is %s".format(
                         self.device_ip, self.access_token
                     )
                 )
