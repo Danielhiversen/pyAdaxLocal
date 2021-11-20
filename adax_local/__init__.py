@@ -38,7 +38,7 @@ class Adax:
             "time": int(time.time()),
             "value": int(target_temperature * 100),
         }
-        with async_timeout.timeout(self._timeout):
+        async with async_timeout.timeout(self._timeout):
             async with self.websession.get(
                 self._url, params=payload, headers=self._headers
             ) as response:
@@ -55,7 +55,7 @@ class Adax:
         """Get heater status."""
         payload = {"command": "stat", "time": int(time.time())}
         try:
-            with async_timeout.timeout(self._timeout):
+            async with async_timeout.timeout(self._timeout):
                 async with self.websession.get(
                     self._url, params=payload, headers=self._headers
                 ) as response:
