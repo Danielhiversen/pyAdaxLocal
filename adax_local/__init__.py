@@ -83,9 +83,24 @@ class AdaxConfig:
     def __init__(self, wifi_ssid, wifi_psk):
         self.wifi_ssid = wifi_ssid
         self.wifi_psk = wifi_psk
-        self.access_token = secrets.token_hex(10)
-        self.device_ip = None
-        self.mac_id = None
+        self._access_token = secrets.token_hex(10)
+        self._device_ip = None
+        self._mac_id = None
+
+    @property
+    def device_ip(self):
+        """Return device ip."""
+        return self._device_ip
+
+    @property
+    def mac_id(self):
+        """Return mac id."""
+        return self._mac_id
+
+    @property
+    def access_token(self):
+        """Return access token."""
+        return self._access_token
 
     def notification_handler(self, _, data):
         if not data:
@@ -99,13 +114,13 @@ class AdaxConfig:
             raise InvalidWifiCred
 
         if status == BLE_COMMAND_STATUS_OK and byte_list and len(byte_list) >= 5:
-            self.device_ip = "%d.%d.%d.%d" % (
+            self._device_ip = "%d.%d.%d.%d" % (
                 byte_list[1],
                 byte_list[2],
                 byte_list[3],
                 byte_list[4],
             )
-            _LOGGER.debug("Heater Registered, use with IP %s", self.device_ip)
+            _LOGGER.debug("Heater Registered, use with IP %s", self._device_ip)
 
         _LOGGER.debug("Status %s", byte_list)
 
@@ -113,7 +128,7 @@ class AdaxConfig:
         _LOGGER.debug(
             "Press and hold OK button on the heater until the blue led starts blinking"
         )
-        device, self.mac_id = await scan_for_available_ble_device()
+        device, self._mac_id = await scan_for_available_ble_device()
         _LOGGER.debug("device: %s", device)
         if not device:
             return False
@@ -127,7 +142,7 @@ class AdaxConfig:
             )
             ssid_encoded = urllib.parse.quote(self.wifi_ssid)
             psk_encoded = urllib.parse.quote(self.wifi_psk)
-            access_token_encoded = urllib.parse.quote(self.access_token)
+            access_token_encoded = urllib.parse.quote(self._access_token)
             byte_list = list(
                 bytearray(
                     "command=join&ssid="
@@ -142,14 +157,14 @@ class AdaxConfig:
             _LOGGER.debug("write_command")
             await write_command(byte_list, client)
             k = 0
-            while k < 20 and client.is_connected and self.device_ip is None:
+            while k < 20 and client.is_connected and self._device_ip is None:
                 await asyncio.sleep(1)
                 k += 1
-            if self.device_ip:
+            if self._device_ip:
                 _LOGGER.debug(
                     "Heater ip is %s and the token is %s",
-                    self.device_ip,
-                    self.access_token,
+                    self._device_ip,
+                    self._access_token,
                 )
                 return True
             return False
