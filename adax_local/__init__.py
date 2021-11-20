@@ -142,7 +142,7 @@ class AdaxConfig:
             _LOGGER.debug("write_command")
             await write_command(byte_list, client)
             k = 0
-            while k < 20 and await client.is_connected and self.device_ip is None:
+            while k < 20 and client.is_connected and self.device_ip is None:
                 await asyncio.sleep(1)
                 k += 1
             if self.device_ip:
@@ -232,7 +232,7 @@ async def write_command(command_byte_list, client):
             byte_count - sent_byte_count if is_last else MAX_BYTES_IN_COMMAND_CHUNK
         )
         chunk = [chunk_nr, 1 if is_last else 0] + command_byte_list[
-            sent_byte_count : (sent_byte_count + chunk_data_length)
+            sent_byte_count: (sent_byte_count + chunk_data_length)
         ]
         await client.write_gatt_char(
             UUID_ADAX_BLE_SERVICE_CHARACTERISTIC_COMMAND, bytearray(chunk)
