@@ -1,2 +1,3 @@
 aiohttp
 async_timeout
+bleak
