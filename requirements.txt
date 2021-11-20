@@ -1,3 +1,3 @@
-aiohttp
-async_timeout
+aiohttp>=3.0.6
+async_timeout>=1.4.0
 bleak

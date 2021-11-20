@@ -30,7 +30,6 @@ class Adax:
         self._url = "https://" + device_ip + "/api"
         self._headers = {"Authorization": "Basic " + self._access_token}
         self._timeout = timeout
-        self.mac_id = None
 
     async def set_target_temperature(self, target_temperature):
         """Set target temperature."""
@@ -39,7 +38,7 @@ class Adax:
             "time": int(time.time()),
             "value": int(target_temperature * 100),
         }
-        with async_timeout.timeout(self._timeout):
+        async with async_timeout.timeout(self._timeout):
             async with self.websession.get(
                 self._url, params=payload, headers=self._headers
             ) as response:
@@ -56,7 +55,7 @@ class Adax:
         """Get heater status."""
         payload = {"command": "stat", "time": int(time.time())}
         try:
-            with async_timeout.timeout(self._timeout):
+            async with async_timeout.timeout(self._timeout):
                 async with self.websession.get(
                     self._url, params=payload, headers=self._headers
                 ) as response:
@@ -86,6 +85,7 @@ class AdaxConfig:
         self.wifi_psk = wifi_psk
         self.access_token = secrets.token_hex(10)
         self.device_ip = None
+        self.mac_id = None
 
     def notification_handler(self, _, data):
         if not data:
@@ -142,14 +142,14 @@ class AdaxConfig:
             _LOGGER.debug("write_command")
             await write_command(byte_list, client)
             k = 0
-            while k < 20 and await client.is_connected and self.device_ip is None:
+            while k < 20 and client.is_connected and self.device_ip is None:
                 await asyncio.sleep(1)
                 k += 1
             if self.device_ip:
                 _LOGGER.debug(
-                    "Heater ip is {} and the token is {}".format(
-                        self.device_ip, self.access_token
-                    )
+                    "Heater ip is %s and the token is %s",
+                    self.device_ip,
+                    self.access_token,
                 )
                 return True
             return False
