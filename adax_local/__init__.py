@@ -139,7 +139,10 @@ class AdaxConfig:
                 return await self._configure_device(device)
             except bleak.exc.BleakError:
                 _LOGGER.error("Failed to configure device", exc_info=True)
-                subprocess.call(['bluetoothctl', 'disconnect', device], timeout=10)
+                try:
+                    subprocess.call(['bluetoothctl', 'disconnect', device], timeout=10)
+                except subprocess.TimeoutExpired:
+                    continue
 
         return False
 
