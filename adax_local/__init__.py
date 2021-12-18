@@ -3,6 +3,7 @@ import asyncio
 import logging
 import operator
 import secrets
+import subprocess
 import time
 import urllib
 
@@ -132,6 +133,18 @@ class AdaxConfig:
         _LOGGER.debug("device: %s", device)
         if not device:
             return False
+
+        for k in range(3):
+            try:
+                return await self._configure_device(device)
+            except bleak.exc.BleakError:
+                _LOGGER.error("Failed to configure device", exc_info=True)
+                subprocess.call(['bluetoothctl', 'disconnect', device], timeout=10)
+
+        return False
+
+    async def _configure_device(self, device):
+
         async with bleak.BleakClient(device) as client:
             _LOGGER.debug("connect")
             await client.connect()
