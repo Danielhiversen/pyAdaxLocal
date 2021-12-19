@@ -150,7 +150,14 @@ class AdaxConfig:
 
         async with bleak.BleakClient(device) as client:
             _LOGGER.debug("connect")
-            await client.connect()
+
+            try:
+                await client.connect()
+            except bleak.exc.BleakError:
+                _LOGGER.error("Failed to connect", exc_info=True)
+                await client.disconnect()
+                await client.connect()
+
             _LOGGER.debug("start_notify")
             await client.start_notify(
                 UUID_ADAX_BLE_SERVICE_CHARACTERISTIC_COMMAND,
