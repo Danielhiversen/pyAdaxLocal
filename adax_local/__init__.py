@@ -133,14 +133,6 @@ class AdaxConfig:
         if not device:
             return False
         async with bleak.BleakClient(device) as client:
-            _LOGGER.debug("connect")
-
-            try:
-                await client.connect()
-            except bleak.exc.BleakError:
-                _LOGGER.error("Failed to connect", exc_info=True)
-                await client.disconnect()
-                await client.connect()
 
             _LOGGER.debug("start_notify")
             await client.start_notify(
