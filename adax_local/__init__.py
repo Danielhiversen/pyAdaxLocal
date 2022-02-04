@@ -24,6 +24,7 @@ except FileNotFoundError:
     _LOGGER.error("Import bleak failed", exc_info=True)
     bleak = None
 
+
 class Adax:
     """Adax data handler."""
 
