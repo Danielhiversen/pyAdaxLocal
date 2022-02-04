@@ -7,7 +7,12 @@ import time
 import urllib
 
 import async_timeout
-import bleak
+try:
+    import bleak
+except FileNotFoundError:
+    _LOGGER.error("Import bleak failed", exc_info=True)
+    bleak = None
+
 
 ADAX_DEVICE_TYPE_HEATER_BLE = 5
 BLE_COMMAND_STATUS_OK = 0
@@ -125,6 +130,10 @@ class AdaxConfig:
         _LOGGER.debug("Status %s", byte_list)
 
     async def configure_device(self):
+        if bleak is None:
+            _LOGGER.error("Bleak library not loaded")
+            return
+
         _LOGGER.debug(
             "Press and hold OK button on the heater until the blue led starts blinking"
         )
@@ -170,6 +179,9 @@ class AdaxConfig:
 
 
 async def scan_for_available_ble_device(retry=1):
+    if bleak is None:
+        _LOGGER.error("Bleak library not loaded")
+        return
     discovered = await bleak.discover(timeout=60)
     _LOGGER.debug(discovered)
     if not discovered:
