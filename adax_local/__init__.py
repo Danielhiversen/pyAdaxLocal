@@ -7,11 +7,6 @@ import time
 import urllib
 
 import async_timeout
-try:
-    import bleak
-except FileNotFoundError:
-    _LOGGER.error("Import bleak failed", exc_info=True)
-    bleak = None
 
 
 ADAX_DEVICE_TYPE_HEATER_BLE = 5
@@ -23,6 +18,11 @@ UUID_ADAX_BLE_SERVICE_CHARACTERISTIC_COMMAND = "0000cc11-0000-1000-8000-00805f9b
 
 _LOGGER = logging.getLogger(__name__)
 
+try:
+    import bleak
+except FileNotFoundError:
+    _LOGGER.error("Import bleak failed", exc_info=True)
+    bleak = None
 
 class Adax:
     """Adax data handler."""
