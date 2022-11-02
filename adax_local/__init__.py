@@ -183,7 +183,7 @@ async def scan_for_available_ble_device(retry=1):
     if bleak is None:
         _LOGGER.error("Bleak library not loaded")
         return
-    discovered = await bleak.discover(timeout=60)
+    discovered = await bleak.BleakScanner.discover(timeout=60)
     _LOGGER.debug(discovered)
     if not discovered:
         if retry > 0:
