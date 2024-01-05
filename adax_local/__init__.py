@@ -60,6 +60,7 @@ class Adax:
     async def get_status(self):
         """Get heater status."""
         payload = {"command": "stat", "time": int(time.time())}
+        data = {"target_temperature": None, "current_temperature": None}
         try:
             async with async_timeout.timeout(self._timeout):
                 async with self.websession.get(
@@ -71,10 +72,10 @@ class Adax:
                             response.status,
                             response.reason,
                         )
-                        return None, None
+                        return data
                     response_json = await response.json()
         except asyncio.TimeoutError:
-            return None, None
+            return data
 
         _LOGGER.debug("Heater response %s %s", response.status, response_json)
         data = {}
