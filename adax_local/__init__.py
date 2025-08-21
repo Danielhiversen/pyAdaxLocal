@@ -184,20 +184,19 @@ async def scan_for_available_ble_device(retry=1):
     if bleak is None:
         _LOGGER.error("Bleak library not loaded")
         return
-    discovered = await bleak.BleakScanner.discover(timeout=60)
+    discovered = await bleak.BleakScanner.discover(timeout=60, return_adv=True)
     _LOGGER.debug(discovered)
     if not discovered:
         if retry > 0:
             return await scan_for_available_ble_device(retry - 1)
         raise HeaterNotFound
 
-    for discovered_item in discovered:
-        metadata = discovered_item.metadata
-        uuids = metadata.get("uuids")
+    for discovered_item, advertisement_data in discovered.values():
+        uuids = advertisement_data.service_uuids
         if uuids is None or UUID_ADAX_BLE_SERVICE not in uuids:
             continue
         _LOGGER.info("Found Adax heater %s", discovered_item)
-        manufacturer_data = metadata.get("manufacturer_data")
+        manufacturer_data = advertisement_data.manufacturer_data
         _LOGGER.debug("manufacturer_data %s", manufacturer_data)
         if not manufacturer_data:
             continue
