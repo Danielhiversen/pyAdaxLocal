@@ -26,7 +26,7 @@ except FileNotFoundError:
 
 
 class Adax:
-    """Adax data handler."""
+    """Adax data handler teest."""
 
     def __init__(self, device_ip, access_token, websession, timeout=15):
         """Init adax data handler."""
