@@ -6,59 +6,69 @@ on:
 
 jobs:
   validate:
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version:
-          - "3.8"
-          - "3.9"
-          - "3.10"
+        python-version: ["3.8", "3.9", "3.10"]
     env:
       SRC_FOLDER: adax_local
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
-      - uses: actions/cache@v2
+      - name: Cache pip
+        uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: pip_cache
-      - name: Install depencency
-        run: |
-            pip install dlint flake8 flake8-bandit flake8-bugbear flake8-deprecated flake8-executable isort pylint
-            pip install -r requirements.txt
+          key: pip-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
 
-      - name: isort
-        if: github.event.pull_request.head.repo.full_name == github.repository
+      - name: Install dependencies
         run: |
-            isort **/*.py
-      - name: black
-        if: github.event.pull_request.head.repo.full_name == github.repository
-        uses: lgeiger/black-action@master
+          python -m pip install --upgrade pip
+          pip install dlint flake8 flake8-bandit flake8-bugbear flake8-deprecated flake8-executable isort pylint black
+          pip install -r requirements.txt
+
+      - name: isort (PR only)
+        uses: isort/isort-action@v1
         with:
-            args: .
-      - name: Check for modified files
-        if: github.event.pull_request.head.repo.full_name == github.repository
-        id: git-check
-        run: echo ::set-output name=modified::$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)
-      - name: Push changes
-        if: github.event.pull_request.head.repo.full_name == github.repository && steps.git-check.outputs.modified == 'true'
+          args: "--check-only --diff"
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+
+      - name: black (PR only)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         run: |
-            git config --global user.name 'Daniel Hoyer'
-            git config --global user.email 'mail@dahoiv.net'
-            git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-            git checkout $GITHUB_HEAD_REF
-            git commit -am "fixup! Format Python code with black"
-            git push
+          black $SRC_FOLDER --check
+
+      - name: Check for modified files (PR only)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        id: git-check
+        run: |
+          echo "modified=$(if git diff-index --quiet HEAD --; then echo "false"; else echo "true"; fi)" >> $GITHUB_OUTPUT
+
+      - name: Push changes (PR only)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.git-check.outputs.modified == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name 'Daniel Hoyer'
+          git config --global user.email 'mail@dahoiv.net'
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}
+          git checkout $GITHUB_HEAD_REF
+          git commit -am "fixup! Format Python code with black and isort"
+          git push
+
       - name: Flake8 Code Linter
         run: |
-            flake8 $SRC_FOLDER --max-line-length=120 --extend-ignore=E203
+          flake8 $SRC_FOLDER --max-line-length=120 --extend-ignore=E203
+
       - name: isort
         run: |
-            isort **/*.py
+          isort $SRC_FOLDER --check-only
+
       - name: Pylint Code Linter
         run: |
-            pylint --disable=C,R  --enable=unidiomatic-typecheck $SRC_FOLDER
+          pylint --disable=C,R --enable=unidiomatic-typecheck $SRC_FOLDER
