@@ -41,7 +41,7 @@ jobs:
       - name: black (PR only)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         run: |
-          black $SRC_FOLDER
+          black $SRC_FOLDER --check
 
       - name: Check for modified files (PR only)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
