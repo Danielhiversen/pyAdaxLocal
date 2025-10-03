@@ -1,4 +1,5 @@
 """Local support for Adax wifi-enabled home heaters."""
+
 import asyncio
 import logging
 import operator
@@ -7,7 +8,6 @@ import time
 import urllib
 
 import async_timeout
-
 
 ADAX_DEVICE_TYPE_HEATER_BLE = 5
 BLE_COMMAND_STATUS_OK = 0
