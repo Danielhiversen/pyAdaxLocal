@@ -34,6 +34,8 @@ jobs:
 
       - name: isort (PR only)
         uses: isort/isort-action@v1
+        with:
+          args: "--check-only --diff"
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
 
       - name: black (PR only)
