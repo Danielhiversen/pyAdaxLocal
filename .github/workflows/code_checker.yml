@@ -65,7 +65,7 @@ jobs:
 
       - name: isort
         run: |
-          isort $SRC_FOLDER/**/*.py
+          isort $SRC_FOLDER/**/*.py --check-only
 
       - name: Pylint Code Linter
         run: |
