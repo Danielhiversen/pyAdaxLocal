@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 try:
     import bleak
+    from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
 except FileNotFoundError:
     _LOGGER.error("Import bleak failed", exc_info=True)
     bleak = None
@@ -143,7 +144,12 @@ class AdaxConfig:
         _LOGGER.debug("device: %s", device)
         if not device:
             return False
-        async with bleak.BleakClient(device) as client:
+        async with establish_connection(
+            BleakClientWithServiceCache,
+            device,
+            device.name or "Unknown",
+            max_attempts=3,
+        ) as client:
 
             _LOGGER.debug("start_notify")
             await client.start_notify(
@@ -214,7 +220,7 @@ async def scan_for_available_ble_device(retry=1):
         if not device_available(manufacturer_data_list):
             _LOGGER.warning("Heater not available.")
             raise HeaterNotAvailable
-        return discovered_item.address, find_mac_id(manufacturer_data_list)
+        return discovered_item, find_mac_id(manufacturer_data_list)
     if retry > 0:
         return await scan_for_available_ble_device(retry - 1)
     raise HeaterNotFound
