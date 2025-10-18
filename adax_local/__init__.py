@@ -20,7 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 try:
     import bleak
-    from bleak_retry_connector import BleakClientWithServiceCache, establish_connection
+    from bleak_retry_connector import (BleakClientWithServiceCache,
+                                       establish_connection)
 except FileNotFoundError:
     _LOGGER.error("Import bleak failed", exc_info=True)
     bleak = None
@@ -118,7 +119,7 @@ class AdaxConfig:
         status = byte_list[0]
         _LOGGER.debug("notification_handler %s", byte_list)
         if status == BLE_COMMAND_STATUS_INVALID_WIFI:
-            _LOGGER.debug("Invalid WiFi credentials %s")
+            _LOGGER.debug("Invalid WiFi credentials")
             raise InvalidWifiCred
 
         if status == BLE_COMMAND_STATUS_OK and byte_list and len(byte_list) >= 5:
