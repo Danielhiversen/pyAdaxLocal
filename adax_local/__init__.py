@@ -20,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 try:
     import bleak
+    from bleak_retry_connector import (BleakClientWithServiceCache,
+                                       establish_connection)
 except FileNotFoundError:
     _LOGGER.error("Import bleak failed", exc_info=True)
     bleak = None
@@ -117,7 +119,7 @@ class AdaxConfig:
         status = byte_list[0]
         _LOGGER.debug("notification_handler %s", byte_list)
         if status == BLE_COMMAND_STATUS_INVALID_WIFI:
-            _LOGGER.debug("Invalid WiFi credentials %s")
+            _LOGGER.debug("Invalid WiFi credentials")
             raise InvalidWifiCred
 
         if status == BLE_COMMAND_STATUS_OK and byte_list and len(byte_list) >= 5:
@@ -143,41 +145,45 @@ class AdaxConfig:
         _LOGGER.debug("device: %s", device)
         if not device:
             return False
-        async with bleak.BleakClient(device) as client:
-
-            _LOGGER.debug("start_notify")
-            await client.start_notify(
-                UUID_ADAX_BLE_SERVICE_CHARACTERISTIC_COMMAND,
-                self.notification_handler,
+        client = await establish_connection(
+            BleakClientWithServiceCache,
+            device,
+            device.name or "Unknown",
+            max_attempts=3,
+        )
+        _LOGGER.debug("start_notify")
+        await client.start_notify(
+            UUID_ADAX_BLE_SERVICE_CHARACTERISTIC_COMMAND,
+            self.notification_handler,
+        )
+        ssid_encoded = urllib.parse.quote(self.wifi_ssid)
+        psk_encoded = urllib.parse.quote(self.wifi_psk)
+        access_token_encoded = urllib.parse.quote(self._access_token)
+        byte_list = list(
+            bytearray(
+                "command=join&ssid="
+                + ssid_encoded
+                + "&psk="
+                + psk_encoded
+                + "&token="
+                + access_token_encoded,
+                "ascii",
             )
-            ssid_encoded = urllib.parse.quote(self.wifi_ssid)
-            psk_encoded = urllib.parse.quote(self.wifi_psk)
-            access_token_encoded = urllib.parse.quote(self._access_token)
-            byte_list = list(
-                bytearray(
-                    "command=join&ssid="
-                    + ssid_encoded
-                    + "&psk="
-                    + psk_encoded
-                    + "&token="
-                    + access_token_encoded,
-                    "ascii",
-                )
+        )
+        _LOGGER.debug("write_command")
+        await write_command(byte_list, client)
+        k = 0
+        while k < 20 and client.is_connected and self._device_ip is None:
+            await asyncio.sleep(1)
+            k += 1
+        if self._device_ip:
+            _LOGGER.debug(
+                "Heater ip is %s and the token is %s",
+                self._device_ip,
+                self._access_token,
             )
-            _LOGGER.debug("write_command")
-            await write_command(byte_list, client)
-            k = 0
-            while k < 20 and client.is_connected and self._device_ip is None:
-                await asyncio.sleep(1)
-                k += 1
-            if self._device_ip:
-                _LOGGER.debug(
-                    "Heater ip is %s and the token is %s",
-                    self._device_ip,
-                    self._access_token,
-                )
-                return True
-            return False
+            return True
+        return False
 
 
 async def scan_for_available_ble_device(retry=1):
@@ -214,7 +220,7 @@ async def scan_for_available_ble_device(retry=1):
         if not device_available(manufacturer_data_list):
             _LOGGER.warning("Heater not available.")
             raise HeaterNotAvailable
-        return discovered_item.address, find_mac_id(manufacturer_data_list)
+        return discovered_item, find_mac_id(manufacturer_data_list)
     if retry > 0:
         return await scan_for_available_ble_device(retry - 1)
     raise HeaterNotFound

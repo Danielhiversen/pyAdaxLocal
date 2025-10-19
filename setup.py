@@ -15,7 +15,7 @@ setup(
     install_requires=install_requires,
     version="0.2.0",
     description="A python3 library to communicate with Adax",
-    python_requires=">=3.8.0",
+    python_requires=">=3.10.0",
     author="Daniel Hjelseth Høyer",
     author_email="mail@dahoiv.net",
     url="https://github.com/Danielhiversen/pyAdaxLocal",
