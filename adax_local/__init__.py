@@ -145,46 +145,45 @@ class AdaxConfig:
         _LOGGER.debug("device: %s", device)
         if not device:
             return False
-        async with establish_connection(
+        client = await establish_connection(
             BleakClientWithServiceCache,
             device,
             device.name or "Unknown",
             max_attempts=3,
-        ) as client:
-
-            _LOGGER.debug("start_notify")
-            await client.start_notify(
-                UUID_ADAX_BLE_SERVICE_CHARACTERISTIC_COMMAND,
-                self.notification_handler,
+        )
+        _LOGGER.debug("start_notify")
+        await client.start_notify(
+            UUID_ADAX_BLE_SERVICE_CHARACTERISTIC_COMMAND,
+            self.notification_handler,
+        )
+        ssid_encoded = urllib.parse.quote(self.wifi_ssid)
+        psk_encoded = urllib.parse.quote(self.wifi_psk)
+        access_token_encoded = urllib.parse.quote(self._access_token)
+        byte_list = list(
+            bytearray(
+                "command=join&ssid="
+                + ssid_encoded
+                + "&psk="
+                + psk_encoded
+                + "&token="
+                + access_token_encoded,
+                "ascii",
             )
-            ssid_encoded = urllib.parse.quote(self.wifi_ssid)
-            psk_encoded = urllib.parse.quote(self.wifi_psk)
-            access_token_encoded = urllib.parse.quote(self._access_token)
-            byte_list = list(
-                bytearray(
-                    "command=join&ssid="
-                    + ssid_encoded
-                    + "&psk="
-                    + psk_encoded
-                    + "&token="
-                    + access_token_encoded,
-                    "ascii",
-                )
+        )
+        _LOGGER.debug("write_command")
+        await write_command(byte_list, client)
+        k = 0
+        while k < 20 and client.is_connected and self._device_ip is None:
+            await asyncio.sleep(1)
+            k += 1
+        if self._device_ip:
+            _LOGGER.debug(
+                "Heater ip is %s and the token is %s",
+                self._device_ip,
+                self._access_token,
             )
-            _LOGGER.debug("write_command")
-            await write_command(byte_list, client)
-            k = 0
-            while k < 20 and client.is_connected and self._device_ip is None:
-                await asyncio.sleep(1)
-                k += 1
-            if self._device_ip:
-                _LOGGER.debug(
-                    "Heater ip is %s and the token is %s",
-                    self._device_ip,
-                    self._access_token,
-                )
-                return True
-            return False
+            return True
+        return False
 
 
 async def scan_for_available_ble_device(retry=1):
