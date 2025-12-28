@@ -9,7 +9,7 @@ import urllib
 
 import async_timeout
 
-ADAX_DEVICE_TYPE_HEATER_BLE = 5
+ADAX_DEVICE_TYPE_HEATER_BLE = {5, 11}
 BLE_COMMAND_STATUS_OK = 0
 BLE_COMMAND_STATUS_INVALID_WIFI = 1
 MAX_BYTES_IN_COMMAND_CHUNK = 17
@@ -239,7 +239,7 @@ def device_available(manufacturer_data):
     _LOGGER.debug("device_available %s %s %s %s", mac_id, type_id, registered, managed)
     return (
         mac_id
-        and type_id == ADAX_DEVICE_TYPE_HEATER_BLE
+        and type_id in ADAX_DEVICE_TYPE_HEATER_BLE
         and not registered
         and not managed
     )
